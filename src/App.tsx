@@ -13,45 +13,48 @@ function App() {
     title: "",
     description: "",
   });
+  const [editIndex, setEditIndex] = useState<number | null>(null);
 
-  const addTodo = (e: React.FormEvent) => {
+  const addOrUpdateTodo = (e: React.FormEvent) => {
     e.preventDefault();
     if (task.title && task.description) {
-      setTodos([...todos, task]);
+      if (editIndex !== null) {
+        // Update existing todo
+        const updatedTodos = todos.map((todo, index) =>
+          index === editIndex ? task : todo
+        );
+        setTodos(updatedTodos);
+        setEditIndex(null);
+        toast.success("Task Updated");
+      } else {
+        // Add new todo
+        setTodos([...todos, task]);
+        toast.success("New Task Added");
+      }
       setTask({ title: "", description: "" });
-      toast.success("New Task Added");
     }
   };
 
   const deleteTodo = (index: number) => {
     const updatedTodos = todos.filter((_, i) => i !== index);
     setTodos(updatedTodos);
-    toast.error("Task Deleted");
+    toast.success("Task Deleted");
+  };
+
+  const editTodo = (index: number) => {
+    setTask(todos[index]);
+    setEditIndex(index);
+  };
+
+  const cancelEdit = () => {
+    setTask({ title: "", description: "" });
+    setEditIndex(null);
   };
 
   return (
     <>
       <div className="navbar bg-neutral text-base-300">
         <div className="navbar-start">
-          <div className="dropdown">
-            <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                {" "}
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M4 6h16M4 12h8m-8 6h16"
-                />{" "}
-              </svg>
-            </div>
-          </div>
           <a className="btn btn-ghost text-xl">Todo App</a>
         </div>
       </div>
@@ -64,9 +67,11 @@ function App() {
             </div>
           </div>
           <div>
-            <form onSubmit={addTodo}>
+            <form onSubmit={addOrUpdateTodo}>
               <div className="p-5">
-                <p className="text-base-300 text-2xl">Add Todo List</p>
+                <p className="text-base-300 text-2xl">
+                  {editIndex !== null ? "Edit Todo" : "Add Todo List"}
+                </p>
               </div>
               <div className="m-5 flex flex-col justify-center gap-2">
                 <label className="text-base-300 text-lg">Title</label>
@@ -89,8 +94,17 @@ function App() {
                   }
                 ></textarea>
                 <button className="btn btn-sm btn-warning btn-outline text-base-300 text-lg w-full max-w-xs">
-                  Submit
+                  {editIndex !== null ? "Update" : "Submit"}
                 </button>
+                {editIndex !== null && (
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline text-base-300 text-lg w-full max-w-xs mt-2"
+                    onClick={cancelEdit}
+                  >
+                    Cancel
+                  </button>
+                )}
               </div>
             </form>
           </div>
@@ -104,7 +118,10 @@ function App() {
                 <div className="rounded-md bg-base-100 p-2 relative">
                   <h3 className="text-lg">{todo.title}</h3>
                   <p className="text-xs">{todo.description}</p>
-                  <Settings className="cursor-pointer absolute bottom-0 right-6  size-5 m-2" />
+                  <Settings
+                    className="cursor-pointer absolute bottom-0 right-6 size-5 m-2"
+                    onClick={() => editTodo(i)}
+                  />
                   <Trash2
                     className="cursor-pointer absolute bottom-0 right-0 size-5 m-2"
                     onClick={() => deleteTodo(i)}
