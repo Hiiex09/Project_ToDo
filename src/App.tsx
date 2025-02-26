@@ -6,13 +6,16 @@ function App() {
   interface Task {
     title: string;
     description: string;
+    isToggled: boolean;
   }
 
   const [todos, setTodos] = useState<Task[]>([]);
   const [task, setTask] = useState<Task>({
     title: "",
     description: "",
+    isToggled: false,
   });
+
   const [editIndex, setEditIndex] = useState<number | null>(null);
 
   const addOrUpdateTodo = (e: React.FormEvent) => {
@@ -28,11 +31,18 @@ function App() {
         toast.success("Task Updated");
       } else {
         // Add new todo
-        setTodos([...todos, task]);
+        setTodos([...todos, { ...task, isToggled: false }]);
         toast.success("New Task Added");
       }
-      setTask({ title: "", description: "" });
+      setTask({ title: "", description: "", isToggled: false });
     }
+  };
+
+  const toggleTodo = (index: number) => {
+    const updatedTodos = todos.map((todo, i) =>
+      i === index ? { ...todo, isToggled: !todo.isToggled } : todo
+    );
+    setTodos(updatedTodos);
   };
 
   const deleteTodo = (index: number) => {
@@ -47,7 +57,7 @@ function App() {
   };
 
   const cancelEdit = () => {
-    setTask({ title: "", description: "" });
+    setTask({ title: "", description: "", isToggled: false });
     setEditIndex(null);
   };
 
@@ -115,15 +125,25 @@ function App() {
           {todos && todos.length > 0 ? (
             todos.map((todo, i) => (
               <div key={i} className="m-1 p-2">
-                <div className="rounded-md bg-base-100 p-2 relative">
+                <div
+                  className={`rounded-md ${
+                    todo.isToggled
+                      ? "bg-warning-content text-base-100"
+                      : "bg-base-100"
+                  } p-2 relative`}
+                >
                   <h3 className="text-lg">{todo.title}</h3>
                   <p className="text-xs">{todo.description}</p>
+                  <BookmarkCheck
+                    className="cursor-pointer absolute bottom-0 right-12 size-5 m-2 hover:text-info hover:scale-125"
+                    onClick={() => toggleTodo(i)}
+                  />
                   <Settings
-                    className="cursor-pointer absolute bottom-0 right-6 size-5 m-2"
+                    className="cursor-pointer absolute bottom-0 right-6 size-5 m-2 hover:text-success hover:scale-125"
                     onClick={() => editTodo(i)}
                   />
                   <Trash2
-                    className="cursor-pointer absolute bottom-0 right-0 size-5 m-2"
+                    className="cursor-pointer absolute bottom-0 right-0 size-5 m-2 hover:text-error hover:scale-125"
                     onClick={() => deleteTodo(i)}
                   />
                 </div>
